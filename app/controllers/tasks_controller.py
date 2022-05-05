@@ -1,15 +1,9 @@
-
-from asyncio import tasks
-from inspect import Attribute
 from flask import jsonify, request
-from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.exc import IntegrityError
 from app.models.tasks_model import TasksModel
 from sqlalchemy.orm import Session
 from app.configs.database import db
 from app.models.categories_model import CategoriesModel
-from app.models.eisenhowers_model import EisenhowersModel
-from app.controllers import exception
 from sqlalchemy.exc import DataError
 
 
@@ -79,7 +73,7 @@ def create_tasks():
         "description": new_task.description,
         "duration": new_task.duration,
         "classification": new_task.eisenhowers.type,
-        "categories": [cat.name for cat in new_task.categories]
+        "categories": new_task.categories
         },201
 
     except IntegrityError:
@@ -115,11 +109,13 @@ def att_tasks(id):
                 data['eisenhowers_id'] = 4
 
 
+        session.add(task)
+        session.commit()
+
         for key, value in data.items():
             setattr(task, key, value)
 
-        session.add(task)
-        session.commit()
+        
 
         return {
                 "id": task.id,
@@ -129,8 +125,8 @@ def att_tasks(id):
                 "classification": task.eisenhowers.type,
                 "categories": [cat.name for cat in task.categories]
             }
-    except AttributeError:
-        return {"msg":"task not found"},404
+    except KeyError:
+        return ""
 
 def delete_tasks(id):
       
